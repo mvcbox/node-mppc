@@ -91,44 +91,29 @@ export class MppcUncompress {
             this.unpackedBytes.splice(0, 2048);
         }
 
-        for (;;)
-        {
-            if (this.code3 === 0)
-            {
-                if (this.hasBits(4))
-                {
-                    if (this.getPackedBits(1) === 0)
-                    {
+        for (;;) {
+            if (this.code3 === 0) {
+                if (this.hasBits(4)) {
+                    if (this.getPackedBits(1) === 0) {
                         // 0-xxxxxxx
                         this.code1 = 1;
                         this.code3 = 1;
-                    }
-                    else
-                    {
-                        if (this.getPackedBits(1) === 0)
-                        {
+                    } else {
+                        if (this.getPackedBits(1) === 0) {
                             // 10-xxxxxxx
                             this.code1 = 2;
                             this.code3 = 1;
-                        }
-                        else
-                        {
-                            if (this.getPackedBits(1) === 0)
-                            {
+                        } else {
+                            if (this.getPackedBits(1) === 0) {
                                 // 110-xxxxxxxxxxxxx-*
                                 this.code1 = 3;
                                 this.code3 = 1;
-                            }
-                            else
-                            {
-                                if (this.getPackedBits(1) === 0)
-                                {
+                            } else {
+                                if (this.getPackedBits(1) === 0) {
                                     // 1110-xxxxxxxx-*
                                     this.code1 = 4;
                                     this.code3 = 1;
-                                }
-                                else
-                                {
+                                } else {
                                     // 1111-xxxxxx-*
                                     this.code1 = 5;
                                     this.code3 = 1;
@@ -136,28 +121,21 @@ export class MppcUncompress {
                             }
                         }
                     }
-                }
-                else
+                } else {
                     break;
-            }
-            else if (this.code3 === 1)
-            {
-                if (this.code1 === 1)
-                {
-                    if (this.hasBits(7))
-                    {
+                }
+            } else if (this.code3 === 1) {
+                if (this.code1 === 1) {
+                    if (this.hasBits(7)) {
                         const outB = this.cast.UInt32ToUInt8(this.getPackedBits(7));
                         unpackedChunk.push(outB);
                         this.unpackedBytes.push(outB);
                         this.code3 = 0;
-                    }
-                    else
+                    } else {
                         break;
-                }
-                else if (this.code1 === 2)
-                {
-                    if (this.hasBits(7))
-                    {
+                    }
+                } else if (this.code1 === 2) {
+                    if (this.hasBits(7)) {
                         let _tmp = this.getPackedBits(7) | 0x80;
                         _tmp = _tmp < 0 ? this.cast.Int32ToUInt32(_tmp) : _tmp;
 
@@ -165,91 +143,68 @@ export class MppcUncompress {
                         unpackedChunk.push(outB);
                         this.unpackedBytes.push(outB);
                         this.code3 = 0;
-                    }
-                    else
+                    } else {
                         break;
-                }
-                else if (this.code1 === 3)
-                {
-                    if (this.hasBits(13))
-                    {
+                    }
+                } else if (this.code1 === 3) {
+                    if (this.hasBits(13)) {
                         this.code4 = this.cast.UInt32ToInt32(this.getPackedBits(13)) + 0x140;
                         this.code3 = 2;
-                    }
-                    else
+                    } else {
                         break;
-                }
-                else if (this.code1 === 4)
-                {
-                    if (this.hasBits(8))
-                    {
+                    }
+                } else if (this.code1 === 4) {
+                    if (this.hasBits(8)) {
                         this.code4 = this.cast.UInt32ToInt32(this.getPackedBits(8)) + 0x40;
                         this.code3 = 2;
-                    }
-                    else
+                    } else {
                         break;
-                }
-                else if (this.code1 === 5)
-                {
-                    if (this.hasBits(6))
-                    {
+                    }
+                } else if (this.code1 === 5) {
+                    if (this.hasBits(6)) {
                         this.code4 = this.cast.UInt32ToInt32(this.getPackedBits(6));
                         this.code3 = 2;
-                    }
-                    else
+                    } else {
                         break;
+                    }
                 }
-            }
-            else if (this.code3 === 2)
-            {
-                if (this.code4 === 0)
-                {
+            } else if (this.code3 === 2) {
+                if (this.code4 === 0) {
                     // Guess !!!
-                    if (this.packedOffset !== 0)
-                    {
+                    if (this.packedOffset !== 0) {
                         this.packedOffset = 0;
                         this.packedBytes.splice(0, 1);
                     }
+
                     this.code3 = 0;
                     continue;
                 }
+
                 this.code2 = 0;
                 this.code3 = 3;
-            }
-            else if (this.code3 === 3)
-            {
-                if (this.hasBits(1))
-                {
-                    if (this.getPackedBits(1) === 0)
-                    {
+            } else if (this.code3 === 3) {
+                if (this.hasBits(1)) {
+                    if (this.getPackedBits(1) === 0) {
                         this.code3 = 4;
-                    }
-                    else
-                    {
+                    } else {
                         this.code2++;
                     }
-                }
-                else
+                } else {
                     break;
-            }
-            else if (this.code3 === 4)
-            {
+                }
+            } else if (this.code3 === 4) {
                 let copySize: number;
 
-                if (this.code2 === 0)
-                {
+                if (this.code2 === 0) {
                     copySize = 3;
-                }
-                else
-                {
+                } else {
                     const size = this.code2 + 1;
 
-                    if (this.hasBits(size))
-                    {
+                    if (this.hasBits(size)) {
                         copySize = this.cast.UInt32ToInt32(this.getPackedBits(size)) + (1 << size);
-                    }
-                    else
+                    } else {
                         break;
+                    }
                 }
 
                 this.copy(this.code4, copySize, unpackedChunk);
